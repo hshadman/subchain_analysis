@@ -242,7 +242,7 @@ def compute_30mer_data_from_seq_name(seq_name,k_frac, h5_file_path):
         t_df_moments['acylindricity']=t_df_moments.R2.values-t_df_moments.R3.values
         t_df_moments['RSA']=(t_df_moments.asphericity.values**2+(0.75*t_df_moments.acylindricity.values**2))/(t_df_moments.R1.values+t_df_moments.R2.values+t_df_moments.R3.values)**2
         subchain_mean_RSA.append(np.mean(t_df_moments['RSA'].values))
-        subchain_std_RSA.append(np.std(t_df_moments['RSA'].values))
+        subchain_std_RSA.append(t_df_moments['RSA'].std())
 
         #AFRC
         afrc_init = afrc.AnalyticalFRC(fasta_slice)
@@ -250,10 +250,27 @@ def compute_30mer_data_from_seq_name(seq_name,k_frac, h5_file_path):
         rg_rg_theta_mean = (10*rgyr) / rg_theta_mean
         subchain_mean_rg_rg_theta.append(np.mean(rg_rg_theta_mean))
     global combined_subchain_metrics
-    combined_subchain_metrics = pd.DataFrame(zip(seq_name_list,k_list,mid_residue,subchain_mean_Rg,subchain_mean_Rs,subchain_std_Rs, subchain_mean_RSA,subchain_std_RSA,
-                                            subchain_mean_rg_rg_theta,subchain_nu),
-                                         columns = ['seq_name','window_size','mid_residue','mean_Rg','mean_Rs','subchain_std_Rs','mean_RSA','subchain_std_RSA',
-                                            'mean_rg_rg_theta','nu'])
+    #here i am aggregating the information from all the moving windows (combined_subchain_metrics)
+    combined_subchain_metrics = pd.DataFrame(zip(seq_name_list,
+                                                 k_list,
+                                                 mid_residue,
+                                                 subchain_mean_Rg,
+                                                 subchain_mean_Rs,
+                                                 subchain_std_Rs,
+                                                 subchain_mean_RSA,
+                                                 subchain_std_RSA,
+                                            subchain_mean_rg_rg_theta,
+                                                 subchain_nu),
+                                         columns=['seq_name',
+                                             'window_size',
+                                             'mid_residue',
+                                             'mean_Rg',
+                                             'mean_Rs',
+                                             'subchain_std_Rs',
+                                             'mean_RSA',
+                                             'subchain_std_RSA',
+                                            'mean_rg_rg_theta',
+                                             'nu'])
     #Rg metrics
     min_mean_Rg = [combined_subchain_metrics.mean_Rg.min()]
     mid_res_min_mean_Rg = [combined_subchain_metrics[combined_subchain_metrics.mean_Rg == combined_subchain_metrics.mean_Rg.min()].mid_residue.values[0]]
@@ -292,18 +309,63 @@ def compute_30mer_data_from_seq_name(seq_name,k_frac, h5_file_path):
     stdev_mean_nu = [combined_subchain_metrics.nu.std()]
     
     #generate dataframe of chosen subchain metrics
-    selected_subchain_metrics = pd.DataFrame(zip([combined_subchain_metrics.seq_name.unique()[0]],[combined_subchain_metrics.window_size.unique()[0]],
-        min_mean_Rg,mid_res_min_mean_Rg,max_mean_Rg,mid_res_max_mean_Rg,stdev_mean_Rg,
-                                                min_mean_Rs,mid_res_min_mean_Rs,max_mean_Rs,mid_res_max_mean_Rs,stdev_mean_Rs,subchain_std_Rs_for_SM,
-                                                min_mean_RSA,mid_res_min_mean_RSA,max_mean_RSA,mid_res_max_mean_RSA,stdev_mean_RSA,
+    selected_subchain_metrics = pd.DataFrame(zip([combined_subchain_metrics.seq_name.unique()[0]],
+                                                 [combined_subchain_metrics.window_size.unique()[0]],
+                                                 min_mean_Rg,
+                                                 mid_res_min_mean_Rg,
+                                                 max_mean_Rg,
+                                                 mid_res_max_mean_Rg,
+                                                 stdev_mean_Rg,
+                                                 min_mean_Rs,
+                                                 mid_res_min_mean_Rs,
+                                                 max_mean_Rs,
+                                                 mid_res_max_mean_Rs,
+                                                 stdev_mean_Rs,
+                                                 subchain_std_Rs_for_SM,
+                                                min_mean_RSA,
+                                                 mid_res_min_mean_RSA,
+                                                 max_mean_RSA,
+                                                 mid_res_max_mean_RSA,
+                                                 stdev_mean_RSA,
                                                  subchain_std_RSA_for_SM,
-                    min_mean_rg_rg_theta,mid_res_min_mean_rg_rg_theta,max_mean_rg_rg_theta,mid_res_max_mean_rg_rg_theta,stdev_mean_rg_rg_theta,
-                                        min_mean_nu,mid_res_min_mean_nu,max_mean_nu,mid_res_max_mean_nu,stdev_mean_nu),
-                                             columns=['seq_name','window_size',
-                                             'min_mean_Rg','mid_res_min_mean_Rg','max_mean_Rg','mid_res_max_mean_Rg','stdev_mean_Rg',
-                                                     'min_mean_Rs','mid_res_min_mean_Rs','max_mean_Rs','mid_res_max_mean_Rs','subchain_std_Rs_for_SM','subchain_std_Rs',
-                                                      'min_mean_RSA','mid_res_min_mean_RSA','max_mean_RSA','mid_res_max_mean_RSA','stdev_mean_RSA','subchain_std_RSA_for_SM',
-        'min_mean_rg_rg_theta','mid_res_min_mean_rg_rg_theta','max_mean_rg_rg_theta','mid_res_max_mean_rg_rg_theta','stdev_mean_rg_rg_theta',
-                                        'min_mean_nu','mid_res_min_mean_nu','max_mean_nu','mid_res_max_mean_nu','stdev_mean_nu'])
+                                                 min_mean_rg_rg_theta,
+                                                 mid_res_min_mean_rg_rg_theta,
+                                                 max_mean_rg_rg_theta,
+                                                 mid_res_max_mean_rg_rg_theta,
+                                                 stdev_mean_rg_rg_theta,
+                                                 min_mean_nu,
+                                                 mid_res_min_mean_nu,
+                                                 max_mean_nu,
+                                                 mid_res_max_mean_nu,
+                                                 stdev_mean_nu),
+                                             columns=['seq_name',
+                                                      'window_size',
+                                                      'min_mean_Rg',
+                                                      'mid_res_min_mean_Rg',
+                                                      'max_mean_Rg',
+                                                      'mid_res_max_mean_Rg',
+                                                      'stdev_mean_Rg',
+                                                      'min_mean_Rs',
+                                                      'mid_res_min_mean_Rs',
+                                                      'max_mean_Rs',
+                                                      'mid_res_max_mean_Rs',
+                                                      'stdev_mean_Rs',
+                                                      'subchain_std_Rs_for_SM',
+                                                      'min_mean_RSA',
+                                                      'mid_res_min_mean_RSA',
+                                                      'max_mean_RSA',
+                                                      'mid_res_max_mean_RSA',
+                                                      'stdev_mean_RSA',
+                                                      'subchain_std_RSA_for_SM',
+                                                      'min_mean_rg_rg_theta',
+                                                      'mid_res_min_mean_rg_rg_theta',
+                                                      'max_mean_rg_rg_theta',
+                                                      'mid_res_max_mean_rg_rg_theta',
+                                                      'stdev_mean_rg_rg_theta',
+                                                      'min_mean_nu',
+                                                      'mid_res_min_mean_nu',
+                                                      'max_mean_nu',
+                                                      'mid_res_max_mean_nu',
+                                                      'stdev_mean_nu'])
     print('ALL DONE')    
     return selected_subchain_metrics

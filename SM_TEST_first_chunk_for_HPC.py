@@ -13,6 +13,6 @@ for seq_n in seq_name_chunks[chunk_no]:
        master_df = pd.concat([master_df,running_df]).copy()  
     count+=1
     
-master_df.to_csv(f'./subchain_repository_hdf5/SM_TEST_chosen_subchain_metrics_chunk_no_{chunk_no}.csv')
+master_df.to_csv(f'./subchain_repository_hdf5/chosen_subchain_metrics_chunk_no_{chunk_no}.csv')
 print('done with chunk')
 print('make sure to do some testing to verify order and accuracy of metrics')
